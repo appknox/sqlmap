@@ -261,7 +261,6 @@ def start():
     stability and all GET, POST, Cookie and User-Agent parameters to
     check if they are dynamic and SQL injection affected
     """
-
     if conf.direct:
         initTargetEnv()
         setupTargetEnv()

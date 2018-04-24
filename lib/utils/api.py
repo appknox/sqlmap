@@ -18,6 +18,7 @@ import sys
 import tempfile
 import time
 import urllib2
+import psycopg2
 
 from lib.core.common import dataToStdout
 from lib.core.common import getSafeExString
@@ -72,7 +73,7 @@ class Database(object):
         self.cursor = None
 
     def connect(self, who="server"):
-        self.connection = sqlite3.connect(self.database, timeout=3, isolation_level=None, check_same_thread=False)
+        self.connection = psycopg2.connect(host="localhost", database='sqlmap', user="subham", password="subham279")
         self.cursor = self.connection.cursor()
         logger.debug("REST-JSON API %s connected to IPC database" % who)
 
@@ -103,11 +104,11 @@ class Database(object):
             return self.cursor.fetchall()
 
     def init(self):
-        self.execute("CREATE TABLE logs(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, time TEXT, level TEXT, message TEXT)")
+        self.execute("CREATE TABLE logs(id INTEGER PRIMARY KEY, taskid VARCHAR, time TEXT, level TEXT, message TEXT)")
 
-        self.execute("CREATE TABLE data(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, status INTEGER, content_type INTEGER, value TEXT)")
+        self.execute("CREATE TABLE data(id INTEGER PRIMARY KEY, taskid VARCHAR, status INTEGER, content_type INTEGER, value TEXT)")
 
-        self.execute("CREATE TABLE errors(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, error TEXT)")
+        self.execute("CREATE TABLE errors(id INTEGER PRIMARY KEY, taskid VARCHAR, error TEXT)")
 
 class Task(object):
     def __init__(self, taskid, remote_addr):
@@ -156,7 +157,6 @@ class Task(object):
         handle, configFile = tempfile.mkstemp(prefix=MKSTEMP_PREFIX.CONFIG, text=True)
         os.close(handle)
         saveConfig(self.options, configFile)
-
         if os.path.exists("sqlmap.py"):
             self.process = Popen(["python", "sqlmap.py", "--api", "-c", configFile], shell=False, close_fds=not IS_WIN)
         elif os.path.exists(os.path.join(os.getcwd(), "sqlmap.py")):
@@ -222,13 +222,13 @@ class StdDbOut(object):
                     # Ignore all non-relevant messages
                     return
 
-            output = conf.databaseCursor.execute("SELECT id, status, value FROM data WHERE taskid = ? AND content_type = ?", (self.taskid, content_type))
+            output = conf.databaseCursor.execute("SELECT id, status, value FROM data WHERE taskid = %s AND content_type = %s", (self.taskid, content_type))
 
             # Delete partial output from IPC database if we have got a complete output
             if status == CONTENT_STATUS.COMPLETE:
                 if len(output) > 0:
                     for index in xrange(len(output)):
-                        conf.databaseCursor.execute("DELETE FROM data WHERE id = ?", (output[index][0],))
+                        conf.databaseCursor.execute("DELETE FROM data WHERE id = %s", (output[index][0],))
 
                 conf.databaseCursor.execute("INSERT INTO data VALUES(NULL, ?, ?, ?, ?)", (self.taskid, status, content_type, jsonize(value)))
                 if kb.partRun:
@@ -239,7 +239,7 @@ class StdDbOut(object):
                     conf.databaseCursor.execute("INSERT INTO data VALUES(NULL, ?, ?, ?, ?)", (self.taskid, status, content_type, jsonize(value)))
                 else:
                     new_value = "%s%s" % (dejsonize(output[0][2]), value)
-                    conf.databaseCursor.execute("UPDATE data SET value = ? WHERE id = ?", (jsonize(new_value), output[0][0]))
+                    conf.databaseCursor.execute("UPDATE data SET value = %s WHERE id = %s", (jsonize(new_value), output[0][0]))
         else:
             conf.databaseCursor.execute("INSERT INTO errors VALUES(NULL, ?, ?)", (self.taskid, str(value) if value else ""))
 
@@ -563,11 +563,11 @@ def scan_data(taskid):
         return jsonize({"success": False, "message": "Invalid task ID"})
 
     # Read all data from the IPC database for the taskid
-    for status, content_type, value in DataStore.current_db.execute("SELECT status, content_type, value FROM data WHERE taskid = ? ORDER BY id ASC", (taskid,)):
+    for status, content_type, value in DataStore.current_db.execute("SELECT status, content_type, value FROM data WHERE taskid = %s ORDER BY id ASC", (taskid,)):
         json_data_message.append({"status": status, "type": content_type, "value": dejsonize(value)})
 
     # Read all error messages from the IPC database
-    for error in DataStore.current_db.execute("SELECT error FROM errors WHERE taskid = ? ORDER BY id ASC", (taskid,)):
+    for error in DataStore.current_db.execute("SELECT error FROM errors WHERE taskid = %s ORDER BY id ASC", (taskid,)):
         json_errors_message.append(error)
 
     logger.debug("[%s] Retrieved scan data and error messages" % taskid)
@@ -595,7 +595,7 @@ def scan_log_limited(taskid, start, end):
     end = max(1, int(end))
 
     # Read a subset of log messages from the IPC database
-    for time_, level, message in DataStore.current_db.execute("SELECT time, level, message FROM logs WHERE taskid = ? AND id >= ? AND id <= ? ORDER BY id ASC", (taskid, start, end)):
+    for time_, level, message in DataStore.current_db.execute("SELECT time, level, message FROM logs WHERE taskid = %s AND id >= %s AND id <= %s ORDER BY id ASC", (taskid, start, end)):
         json_log_messages.append({"time": time_, "level": level, "message": message})
 
     logger.debug("[%s] Retrieved scan log messages subset" % taskid)
@@ -615,7 +615,7 @@ def scan_log(taskid):
         return jsonize({"success": False, "message": "Invalid task ID"})
 
     # Read all log messages from the IPC database
-    for time_, level, message in DataStore.current_db.execute("SELECT time, level, message FROM logs WHERE taskid = ? ORDER BY id ASC", (taskid,)):
+    for time_, level, message in DataStore.current_db.execute("SELECT time, level, message FROM logs WHERE taskid = %s ORDER BY id ASC", (taskid,)):
         json_log_messages.append({"time": time_, "level": level, "message": message})
 
     logger.debug("[%s] Retrieved scan log messages" % taskid)
