@@ -23,9 +23,7 @@ class Scanner(object):
             self.database, timeout=3,
             isolation_level=None, check_same_thread=False)
         self.cursor = self.connection.cursor()
-        print('----------------------------------------')
-        print(self.cursor)
-        print('----------------------------------------')
+        print('DB Connection Success')
 
     def disconnect(self):
         if self.cursor:
@@ -51,7 +49,7 @@ class Scanner(object):
         if statement.lstrip().upper().startswith("SELECT"):
             return self.cursor.fetchall()
 
-    def jsonize(data):
+    def jsonize(self, data):
         """
         Returns JSON serialized data
 
@@ -61,7 +59,7 @@ class Scanner(object):
 
         return json.dumps(data, sort_keys=False, indent=4)
 
-    def dejsonize(data):
+    def dejsonize(self, data):
         """
         Returns JSON deserialized data
 
@@ -72,23 +70,36 @@ class Scanner(object):
         return json.loads(data)
 
     def initdb(self):
+        print('DB Initialized!')
         self.execute("CREATE TABLE logs(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, time TEXT, level TEXT, message TEXT)")
         self.execute("CREATE TABLE data(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, status INTEGER, content_type INTEGER, value TEXT)")
         self.execute("CREATE TABLE errors(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, error TEXT)")
 
+    def get_data(self, taskid):
+        print('Feching Data for taskid:' + taskid)
+        json_data_message = list()
+        for status, content_type, value in self.cursor.execute("SELECT status, content_type, value FROM data WHERE taskid = ? ORDER BY id ASC", (taskid,)):
+                json_data_message.append({"status": status, "type": content_type, "value": self.dejsonize(value)})
+
+        print('----------------------------------------')
+        print(json_data_message)
+        print('----------------------------------------')
+        return self.jsonize(json_data_message)
+
     def engine_process(self):
+        print('Engine Started!')
         json_data = json.load(open(self.json_file))
+        print(json_data[0]['host'])
         for url in json_data:
             config = configparser.ConfigParser()
             config.read(self.configFile)
-            config.set('API', 'database', database)
-            config.set('API', 'taskid', taskid)
+            config.set('API', 'database', self.database)
+            config.set('API', 'taskid', self.taskid)
             config.set('Target', 'url', url['host'] + url['path'])
-            print('Url: ' + config.get('Target', 'url'))
-            print('database: ' + config.get('API', 'database'))
-            print('taskid: ' + config.get('API', 'taskid'))
+            config.set('Request', 'host', url['headers']['Host'])
+            config.set('Request', 'agent', url['headers']['User-Agent'])
 
-            with open('/tmp/sqlmapconfig-7uEMQw', 'wb') as fp:
+            with open(self.configFile, 'wb') as fp:
                 config.write(fp)
 
             self.process = subprocess.Popen(
@@ -96,10 +107,11 @@ class Scanner(object):
                 shell=False, close_fds=not IS_WIN)
 
             self.process.wait()
+        print('Engine Processed!')
+        return self.get_data(self.taskid)
 
-    def get_data(self, taskid):
-        json_data_message = list()
-        for status, content_type, value in self.cursor.execute("SELECT status, content_type, value FROM data WHERE taskid = ? ORDER BY id ASC", (taskid,)):
-                json_data_message.append({"status": status, "type": content_type, "value": dejsonize(value)})
 
-        return self.jsonize(json_data_message)
+scan = Scanner(json_file='jsondata.json')
+scan.connect()
+scan.initdb()
+scan.engine_process()
