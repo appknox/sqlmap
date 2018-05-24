@@ -23,7 +23,7 @@ class Scanner(object):
             self.database, timeout=3,
             isolation_level=None, check_same_thread=False)
         self.cursor = self.connection.cursor()
-        print('DB Connection Success')
+        print('DB Connection Success ' + self.database)
 
     def disconnect(self):
         if self.cursor:
@@ -89,7 +89,7 @@ class Scanner(object):
     def engine_process(self):
         print('Engine Started!')
         json_data = json.load(open(self.json_file))
-        print(json_data[0]['host'])
+        print(json_data[0]['host']+json_data[0]['path'])
         for url in json_data:
             config = configparser.ConfigParser()
             config.read(self.configFile)
@@ -98,6 +98,16 @@ class Scanner(object):
             config.set('Target', 'url', url['host'] + url['path'])
             config.set('Request', 'host', url['headers']['Host'])
             config.set('Request', 'agent', url['headers']['User-Agent'])
+            config.set('Request', 'referer', url['headers']['Referer'])
+            config.set('Request', 'cookie', url['headers']['Cookie'])
+            config.set('Request', 'method', url['method'])
+            for_header = 'Accept:' + url['headers']['Accept'] + '\n Accept-Encoding:' + url['headers']['Accept-Encoding'] + '\n Accept-Language:' + url['headers']['Accept-Language'] \
+            + '\n Cache-Control:' + url['headers']['Cache-Control'] + '\n Connection:' + url['headers']['Connection'] + '\n Content-Length:' + url['headers']['Content-Length'] \
+            + '\n Content-Type:' + url['headers']['Content-Type']
+            config.set('Request', 'headers', for_header)
+
+            formData = "uname=subham&pass=password"
+            config.set('Request', 'data', formData)
 
             with open(self.configFile, 'wb') as fp:
                 config.write(fp)
@@ -109,9 +119,3 @@ class Scanner(object):
             self.process.wait()
         print('Engine Processed!')
         return self.get_data(self.taskid)
-
-
-scan = Scanner(json_file='jsondata.json')
-scan.connect()
-scan.initdb()
-scan.engine_process()
