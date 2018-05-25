@@ -91,7 +91,7 @@ class Entries:
             self.getTables()
 
             if len(kb.data.cachedTables) > 0:
-                tblList = kb.data.cachedTables.values()
+                tblList = list(kb.data.cachedTables.values())
 
                 if isinstance(tblList[0], (set, tuple, list)):
                     tblList = tblList[0]
@@ -142,7 +142,7 @@ class Entries:
                     continue
 
                 columns = kb.data.cachedColumns[safeSQLIdentificatorNaming(conf.db)][safeSQLIdentificatorNaming(tbl, True)]
-                colList = sorted(filter(None, columns.keys()))
+                colList = sorted([_f for _f in list(columns.keys()) if _f])
 
                 if conf.exclude:
                     colList = [_ for _ in colList if _ not in conf.exclude.split(',')]
@@ -226,7 +226,7 @@ class Entries:
 
                                 if retVal:
                                     entries, _ = retVal
-                                    entries = zip(*[entries[colName] for colName in colList])
+                                    entries = list(zip(*[entries[colName] for colName in colList]))
                         else:
                             query = rootQuery.inband.query % (colString, conf.db, tbl)
                     elif Backend.getIdentifiedDbms() in (DBMS.MYSQL, DBMS.PGSQL, DBMS.HSQLDB):
@@ -247,7 +247,7 @@ class Entries:
                             logger.warn(warnMsg)
 
                     if not isNoneValue(entries):
-                        if isinstance(entries, basestring):
+                        if isinstance(entries, str):
                             entries = [entries]
                         elif not isListLike(entries):
                             entries = []
@@ -262,10 +262,10 @@ class Entries:
                                 if entry is None or len(entry) == 0:
                                     continue
 
-                                if isinstance(entry, basestring):
+                                if isinstance(entry, str):
                                     colEntry = entry
                                 else:
-                                    colEntry = unArrayizeValue(entry[index]) if index < len(entry) else u''
+                                    colEntry = unArrayizeValue(entry[index]) if index < len(entry) else ''
 
                                 maxLen = max(len(column), len(DUMP_REPLACEMENTS.get(getUnicode(colEntry), getUnicode(colEntry))))
 
@@ -427,7 +427,7 @@ class Entries:
                             warnMsg = "Ctrl+C detected in dumping phase"
                             logger.warn(warnMsg)
 
-                    for column, columnEntries in entries.items():
+                    for column, columnEntries in list(entries.items()):
                         length = max(lengths[column], len(column))
 
                         kb.data.dumpedTable[column] = {"length": length, "values": columnEntries}
@@ -447,13 +447,13 @@ class Entries:
                                                         "db": safeSQLIdentificatorNaming(conf.db)}
                     try:
                         attackDumpedTable()
-                    except (IOError, OSError), ex:
+                    except (IOError, OSError) as ex:
                         errMsg = "an error occurred while attacking "
                         errMsg += "table dump ('%s')" % getSafeExString(ex)
                         logger.critical(errMsg)
                     conf.dumper.dbTableValues(kb.data.dumpedTable)
 
-            except SqlmapConnectionException, ex:
+            except SqlmapConnectionException as ex:
                 errMsg = "connection exception detected in dumping phase "
                 errMsg += "('%s')" % getSafeExString(ex)
                 logger.critical(errMsg)
@@ -484,7 +484,7 @@ class Entries:
             if isinstance(kb.data.cachedTables, list):
                 kb.data.cachedTables = {None: kb.data.cachedTables}
 
-            for db, tables in kb.data.cachedTables.items():
+            for db, tables in list(kb.data.cachedTables.items()):
                 conf.db = db
 
                 for table in tables:
@@ -512,7 +512,7 @@ class Entries:
         dumpFromDbs = []
         message = "which database(s)?\n[a]ll (default)\n"
 
-        for db, tblData in dbs.items():
+        for db, tblData in list(dbs.items()):
             if tblData:
                 message += "[%s]\n" % unsafeSQLIdentificatorNaming(db)
 
@@ -520,13 +520,13 @@ class Entries:
         choice = readInput(message, default='a')
 
         if not choice or choice in ('a', 'A'):
-            dumpFromDbs = dbs.keys()
+            dumpFromDbs = list(dbs.keys())
         elif choice in ('q', 'Q'):
             return
         else:
             dumpFromDbs = choice.replace(" ", "").split(',')
 
-        for db, tblData in dbs.items():
+        for db, tblData in list(dbs.items()):
             if db not in dumpFromDbs or not tblData:
                 continue
 
@@ -551,12 +551,12 @@ class Entries:
             else:
                 dumpFromTbls = choice.replace(" ", "").split(',')
 
-            for table, columns in tblData.items():
+            for table, columns in list(tblData.items()):
                 if table not in dumpFromTbls:
                     continue
 
                 conf.tbl = table
-                colList = filter(None, sorted(columns))
+                colList = [_f for _f in sorted(columns) if _f]
 
                 if conf.exclude:
                     colList = [_ for _ in colList if _ not in conf.exclude.split(',')]
@@ -579,7 +579,7 @@ class Entries:
         dumpFromDbs = []
         message = "which database(s)?\n[a]ll (default)\n"
 
-        for db, tablesList in tables.items():
+        for db, tablesList in list(tables.items()):
             if tablesList:
                 message += "[%s]\n" % unsafeSQLIdentificatorNaming(db)
 
@@ -587,13 +587,13 @@ class Entries:
         choice = readInput(message, default='a')
 
         if not choice or choice.lower() == 'a':
-            dumpFromDbs = tables.keys()
+            dumpFromDbs = list(tables.keys())
         elif choice.lower() == 'q':
             return
         else:
             dumpFromDbs = choice.replace(" ", "").split(',')
 
-        for db, tablesList in tables.items():
+        for db, tablesList in list(tables.items()):
             if db not in dumpFromDbs or not tablesList:
                 continue
 

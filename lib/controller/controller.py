@@ -87,7 +87,7 @@ def _selectInjection():
         if point not in points:
             points[point] = injection
         else:
-            for key in points[point].keys():
+            for key in list(points[point].keys()):
                 if key != 'data':
                     points[point][key] = points[point][key] or injection[key]
             points[point]['data'].update(injection['data'])
@@ -101,7 +101,7 @@ def _selectInjection():
 
         points = []
 
-        for i in xrange(0, len(kb.injections)):
+        for i in range(0, len(kb.injections)):
             place = kb.injections[i].place
             parameter = kb.injections[i].parameter
             ptype = kb.injections[i].ptype
@@ -136,7 +136,7 @@ def _formatInjection(inj):
     paramType = conf.method if conf.method not in (None, HTTPMETHOD.GET, HTTPMETHOD.POST) else inj.place
     data = "Parameter: %s (%s)\n" % (inj.parameter, paramType)
 
-    for stype, sdata in inj.data.items():
+    for stype, sdata in list(inj.data.items()):
         title = sdata.title
         vector = sdata.vector
         comment = sdata.comment
@@ -215,7 +215,7 @@ def _saveToHashDB():
             _[key] = injection
         else:
             _[key].data.update(injection.data)
-    hashDBWrite(HASHDB_KEYS.KB_INJECTIONS, _.values(), True)
+    hashDBWrite(HASHDB_KEYS.KB_INJECTIONS, list(_.values()), True)
 
     _ = hashDBRetrieve(HASHDB_KEYS.KB_ABS_FILE_PATHS, True)
     hashDBWrite(HASHDB_KEYS.KB_ABS_FILE_PATHS, kb.absFilePaths | (_ if isinstance(_, set) else set()), True)
@@ -241,9 +241,9 @@ def _saveToResultsFile():
         if key not in results:
             results[key] = []
 
-        results[key].extend(injection.data.keys())
+        results[key].extend(list(injection.data.keys()))
 
-    for key, value in results.items():
+    for key, value in list(results.items()):
         place, parameter, notes = key
         line = "%s,%s,%s,%s,%s%s" % (safeCSValue(kb.originalUrls.get(conf.url) or conf.url), place, parameter, "".join(techniques[_][0].upper() for _ in sorted(value)), notes, os.linesep)
         conf.resultsFP.write(line)
@@ -415,7 +415,7 @@ def start():
                     checkStability()
 
                 # Do a little prioritization reorder of a testable parameter list
-                parameters = conf.parameters.keys()
+                parameters = list(conf.parameters.keys())
 
                 # Order of testing list (first to last)
                 orderList = (PLACE.CUSTOM_POST, PLACE.CUSTOM_HEADER, PLACE.URI, PLACE.POST, PLACE.GET)
@@ -462,7 +462,7 @@ def start():
 
                     paramType = conf.method if conf.method not in (None, HTTPMETHOD.GET, HTTPMETHOD.POST) else place
 
-                    for parameter, value in paramDict.items():
+                    for parameter, value in list(paramDict.items()):
                         if not proceed:
                             break
 
@@ -674,7 +674,7 @@ def start():
         except SqlmapSilentQuitException:
             raise
 
-        except SqlmapBaseException, ex:
+        except SqlmapBaseException as ex:
             errMsg = getSafeExString(ex)
 
             if conf.multipleTargets:

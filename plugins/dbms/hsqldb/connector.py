@@ -41,14 +41,14 @@ class Connector(GenericConnector):
             args = "-Djava.class.path=%s" % jar
             jvm_path = jpype.getDefaultJVMPath()
             jpype.startJVM(jvm_path, args)
-        except Exception, msg:
+        except Exception as msg:
             raise SqlmapConnectionException(msg[0])
 
         try:
             driver = 'org.hsqldb.jdbc.JDBCDriver'
             connection_string = 'jdbc:hsqldb:mem:.'  # 'jdbc:hsqldb:hsql://%s/%s' % (self.hostname, self.db)
             self.connector = jaydebeapi.connect(driver, connection_string, str(self.user), str(self.password))
-        except Exception, msg:
+        except Exception as msg:
             raise SqlmapConnectionException(msg[0])
 
         self.initCursor()
@@ -57,7 +57,7 @@ class Connector(GenericConnector):
     def fetchall(self):
         try:
             return self.cursor.fetchall()
-        except Exception, msg:
+        except Exception as msg:
             logger.log(logging.WARN if conf.dbmsHandler else logging.DEBUG, "(remote) %s" % msg[1])
             return None
 
@@ -67,7 +67,7 @@ class Connector(GenericConnector):
         try:
             self.cursor.execute(query)
             retVal = True
-        except Exception, msg:  # TODO: fix with specific error
+        except Exception as msg:  # TODO: fix with specific error
             logger.log(logging.WARN if conf.dbmsHandler else logging.DEBUG, "(remote) %s" % msg[1])
 
         self.connector.commit()

@@ -28,7 +28,7 @@ from lib.core.exception import SqlmapNoneDataException
 from lib.core.exception import SqlmapUnsupportedFeatureException
 from lib.request import inject
 
-class Miscellaneous:
+class Miscellaneous(object):
     """
     This class defines miscellaneous functionalities for plugins.
     """
@@ -167,7 +167,7 @@ class Miscellaneous:
             if udfDict is None:
                 udfDict = self.sysUdfs
 
-            for udf, inpRet in udfDict.items():
+            for udf, inpRet in list(udfDict.items()):
                 message = "do you want to remove UDF '%s'? [Y/n] " % udf
 
                 if readInput(message, default='Y', boolean=True):

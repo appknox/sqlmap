@@ -206,16 +206,16 @@ DUMMY_USER_PREFIX = "__dummy__"
 # Reference: http://en.wikipedia.org/wiki/ISO/IEC_8859-1
 DEFAULT_PAGE_ENCODING = "iso-8859-1"
 
-try:
-    unicode(DEFAULT_PAGE_ENCODING, DEFAULT_PAGE_ENCODING)
-except LookupError:
-    DEFAULT_PAGE_ENCODING = "utf8"
+# try:
+#     str(DEFAULT_PAGE_ENCODING, DEFAULT_PAGE_ENCODING)
+# except LookupError:
+#     DEFAULT_PAGE_ENCODING = "utf8"
 
 # URL used in dummy runs
 DUMMY_URL = "http://foo/bar?id=1"
 
 # System variables
-IS_WIN = subprocess.mswindows
+IS_WIN = subprocess._mswindows
 
 # The name of the operating system dependent module imported. The following names have currently been registered: 'posix', 'nt', 'mac', 'os2', 'ce', 'java', 'riscos'
 PLATFORM = os.name
@@ -427,7 +427,7 @@ DEFAULT_MSSQL_SCHEMA = "dbo"
 HASH_MOD_ITEM_DISPLAY = 11
 
 # Maximum integer value
-MAX_INT = sys.maxint
+MAX_INT = sys.maxsize
 
 # Replacement for unsafe characters in dump table filenames
 UNSAFE_DUMP_FILEPATH_REPLACEMENT = '_'
@@ -492,7 +492,7 @@ HTML_TITLE_REGEX = "<title>(?P<result>[^<]+)</title>"
 # Table used for Base64 conversion in WordPress hash cracking routine
 ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-PICKLE_REDUCE_WHITELIST = (types.BooleanType, types.DictType, types.FloatType, types.IntType, types.ListType, types.LongType, types.NoneType, types.StringType, types.TupleType, types.UnicodeType, types.XRangeType, type(AttribDict()), type(set()))
+PICKLE_REDUCE_WHITELIST = (bool, dict, float, int, list, int, type(None), bytes, tuple, str, range, type(AttribDict()), type(set()))
 
 # Chars used to quickly distinguish if the user provided tainted parameter values
 DUMMY_SQL_INJECTION_CHARS = ";()'"

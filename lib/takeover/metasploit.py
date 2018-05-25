@@ -153,7 +153,7 @@ class Metasploit:
         message = "which %s do you want to use?" % msg
 
         if lst:
-            for num, data in lst[opSys].items():
+            for num, data in list(lst[opSys].items()):
                 description = data[0]
 
                 if num > maxValue:
@@ -197,7 +197,7 @@ class Metasploit:
         # choose which encoder to use. When called from --os-pwn the encoder
         # is always x86/alpha_mixed - used for sys_bineval() and
         # shellcodeexec
-        if isinstance(encode, basestring):
+        if isinstance(encode, str):
             return encode
 
         elif encode:
@@ -286,7 +286,7 @@ class Metasploit:
         return _payloadStr
 
     def _selectPort(self):
-        for connType, connStr in self._portData.items():
+        for connType, connStr in list(self._portData.items()):
             if self.connectionStr.startswith(connType):
                 return self._skeletonSelection(connStr, maxValue=65535, default=randomRange(1025, 65535))
 
@@ -496,7 +496,7 @@ class Metasploit:
         send_all(proc, "getuid\n")
 
         if conf.privEsc:
-            print
+            print()
 
             infoMsg = "trying to escalate privileges using Meterpreter "
             infoMsg += "'getsystem' command which tries different "

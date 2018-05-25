@@ -8,7 +8,7 @@ import configparser
 # modules from sqlmap
 from lib.core.convert import hexencode
 
-IS_WIN = subprocess.mswindows
+IS_WIN = subprocess._mswindows
 
 
 class Scanner(object):
@@ -23,7 +23,7 @@ class Scanner(object):
             self.database, timeout=3,
             isolation_level=None, check_same_thread=False)
         self.cursor = self.connection.cursor()
-        print('DB Connection Success ' + self.database)
+        print(('DB Connection Success ' + self.database))
 
     def disconnect(self):
         if self.cursor:
@@ -39,7 +39,7 @@ class Scanner(object):
                     self.cursor.execute(statement, arguments)
                 else:
                     self.cursor.execute(statement)
-            except sqlite3.OperationalError, ex:
+            except sqlite3.OperationalError as ex:
                 print('----------------------------------------')
                 print(ex)
                 print('----------------------------------------')
@@ -76,7 +76,7 @@ class Scanner(object):
         self.execute("CREATE TABLE errors(id INTEGER PRIMARY KEY AUTOINCREMENT, taskid INTEGER, error TEXT)")
 
     def get_data(self, taskid):
-        print('Feching Data for taskid:' + taskid)
+        print(('Feching Data for taskid:' + taskid))
         json_data_message = list()
         for status, content_type, value in self.cursor.execute("SELECT status, content_type, value FROM data WHERE taskid = ? ORDER BY id ASC", (taskid,)):
                 json_data_message.append({"status": status, "type": content_type, "value": self.dejsonize(value)})
@@ -89,7 +89,7 @@ class Scanner(object):
     def engine_process(self):
         print('Engine Started!')
         json_data = json.load(open(self.json_file))
-        print(json_data[0]['host']+json_data[0]['path'])
+        print((json_data[0]['host']+json_data[0]['path']))
         for url in json_data:
             config = configparser.ConfigParser()
             config.read(self.configFile)

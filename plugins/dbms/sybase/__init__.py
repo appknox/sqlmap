@@ -15,7 +15,38 @@ from plugins.dbms.sybase.syntax import Syntax
 from plugins.dbms.sybase.takeover import Takeover
 from plugins.generic.misc import Miscellaneous
 
-class SybaseMap(Syntax, Fingerprint, Enumeration, Filesystem, Miscellaneous, Takeover):
+
+class A(Syntax):
+    def __init__(self):
+        Syntax.__init__(self)
+
+
+class B(A, Fingerprint):
+    def __init__(self):
+        Fingerprint.__init__(self)
+
+
+class C(B, Enumeration):
+    def __init__(self):
+        Enumeration.__init__(self)
+
+
+class D(C, Filesystem):
+    def __init__(self):
+        Filesystem.__init__(self)
+
+
+class E(D, Miscellaneous):
+    def __init__(self):
+        Miscellaneous.__init__(self)
+
+
+class F(E, Takeover):
+    def __init__(self):
+        Takeover.__init__(self)
+
+
+class SybaseMap(F):
     """
     This class defines Sybase methods
     """

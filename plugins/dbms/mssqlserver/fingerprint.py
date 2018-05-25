@@ -150,7 +150,7 @@ class Fingerprint(GenericFingerprint):
         }
 
         # Get back-end DBMS underlying operating system version
-        for version, data in versions.items():
+        for version, data in list(versions.items()):
             query = "EXISTS(SELECT %s FROM %s WHERE %s " % (self.tblField, self.fileTblName, self.tblField)
             query += "LIKE '%Windows NT " + data[0] + "%')"
             result = inject.checkBooleanExpression(query)

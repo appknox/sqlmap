@@ -179,7 +179,7 @@ class Databases:
             kb.data.cachedDbs.sort()
 
         if kb.data.cachedDbs:
-            kb.data.cachedDbs = filter(None, list(set(flattenValue(kb.data.cachedDbs))))
+            kb.data.cachedDbs = [_f for _f in list(set(flattenValue(kb.data.cachedDbs))) if _f]
 
         return kb.data.cachedDbs
 
@@ -281,7 +281,7 @@ class Databases:
             values = inject.getValue(query, blind=False, time=False)
 
             if not isNoneValue(values):
-                values = filter(None, arrayizeValue(values))
+                values = [_f for _f in arrayizeValue(values) if _f]
 
                 if len(values) > 0 and not isListLike(values[0]):
                     values = [(dbs[0], _) for _ in values]
@@ -371,11 +371,11 @@ class Databases:
             elif not conf.search:
                 raise SqlmapNoneDataException(errMsg)
         else:
-            for db, tables in kb.data.cachedTables.items():
+            for db, tables in list(kb.data.cachedTables.items()):
                 kb.data.cachedTables[db] = sorted(tables) if tables else tables
 
         if kb.data.cachedTables:
-            for db in kb.data.cachedTables.keys():
+            for db in list(kb.data.cachedTables.keys()):
                 kb.data.cachedTables[db] = list(set(kb.data.cachedTables[db]))
 
         return kb.data.cachedTables
@@ -422,7 +422,7 @@ class Databases:
         for col in colList:
             colList[colList.index(col)] = safeSQLIdentificatorNaming(col)
 
-        colList = filter(None, colList)
+        colList = [_f for _f in colList if _f]
 
         if conf.tbl:
             if Backend.getIdentifiedDbms() in (DBMS.ORACLE, DBMS.DB2, DBMS.HSQLDB):
@@ -436,7 +436,7 @@ class Databases:
                 if conf.db in kb.data.cachedTables:
                     tblList = kb.data.cachedTables[conf.db]
                 else:
-                    tblList = kb.data.cachedTables.values()
+                    tblList = list(kb.data.cachedTables.values())
 
                 if isinstance(tblList[0], (set, tuple, list)):
                     tblList = tblList[0]
@@ -449,7 +449,7 @@ class Databases:
             else:
                 return kb.data.cachedColumns
 
-        tblList = filter(None, (safeSQLIdentificatorNaming(_, True) for _ in tblList))
+        tblList = [_f for _f in (safeSQLIdentificatorNaming(_, True) for _ in tblList) if _f]
 
         if bruteForce is None:
             if Backend.isDbms(DBMS.MYSQL) and not kb.data.has_information_schema:
@@ -610,7 +610,7 @@ class Databases:
                                 if len(columnData) == 1:
                                     columns[name] = None
                                 else:
-                                    key = int(columnData[1]) if isinstance(columnData[1], basestring) and columnData[1].isdigit() else columnData[1]
+                                    key = int(columnData[1]) if isinstance(columnData[1], str) and columnData[1].isdigit() else columnData[1]
                                     if Backend.isDbms(DBMS.FIREBIRD):
                                         columnData[1] = FIREBIRD_TYPES.get(key, columnData[1])
                                     elif Backend.isDbms(DBMS.INFORMIX):
@@ -771,7 +771,7 @@ class Databases:
 
                             colType = unArrayizeValue(inject.getValue(query, union=False, error=False))
 
-                            key = int(colType) if isinstance(colType, basestring) and colType.isdigit() else colType
+                            key = int(colType) if isinstance(colType, str) and colType.isdigit() else colType
                             if Backend.isDbms(DBMS.FIREBIRD):
                                 colType = FIREBIRD_TYPES.get(key, colType)
                             elif Backend.isDbms(DBMS.INFORMIX):
@@ -823,10 +823,10 @@ class Databases:
             self.getTables()
 
             infoMsg = "fetched tables: "
-            infoMsg += ", ".join(["%s" % ", ".join("%s%s%s" % (unsafeSQLIdentificatorNaming(db), ".." if Backend.isDbms(DBMS.MSSQL) or Backend.isDbms(DBMS.SYBASE) else '.', unsafeSQLIdentificatorNaming(_)) for _ in tbl) for db, tbl in kb.data.cachedTables.items()])
+            infoMsg += ", ".join(["%s" % ", ".join("%s%s%s" % (unsafeSQLIdentificatorNaming(db), ".." if Backend.isDbms(DBMS.MSSQL) or Backend.isDbms(DBMS.SYBASE) else '.', unsafeSQLIdentificatorNaming(_)) for _ in tbl) for db, tbl in list(kb.data.cachedTables.items())])
             logger.info(infoMsg)
 
-            for db, tables in kb.data.cachedTables.items():
+            for db, tables in list(kb.data.cachedTables.items()):
                 for tbl in tables:
                     conf.db = db
                     conf.tbl = tbl
@@ -890,7 +890,7 @@ class Databases:
         else:
             self.getTables()
 
-            for db, tables in kb.data.cachedTables.items():
+            for db, tables in list(kb.data.cachedTables.items()):
                 for table in tables:
                     self._tableGetCount(db, table)
 

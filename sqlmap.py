@@ -9,10 +9,10 @@ import sys
 
 sys.dont_write_bytecode = True
 
-try:
-    __import__("lib.utils.versioncheck")  # this has to be the first non-standard import
-except ImportError:
-    exit("[!] wrong installation detected (missing modules). Visit 'https://github.com/sqlmapproject/sqlmap/#installation' for further details")
+# try:
+#     __import__("lib.utils.versioncheck")  # this has to be the first non-standard import
+# except ImportError:
+#     exit("[!] wrong installation detected (missing modules). Visit 'https://github.com/sqlmapproject/sqlmap/#installation' for further details")
 
 import bdb
 import distutils
@@ -24,7 +24,7 @@ import os
 import re
 import shutil
 import sys
-import thread
+import _thread
 import threading
 import time
 import traceback
@@ -64,6 +64,7 @@ try:
     from lib.core.settings import UNICODE_ENCODING
     from lib.core.settings import VERSION
     from lib.parse.cmdline import cmdLineParser
+    from lib.controller.controller import start
 except KeyboardInterrupt:
     errMsg = "user aborted"
     logger.error(errMsg)
@@ -113,6 +114,7 @@ def main():
     """
     Main function of sqlmap when running from command line.
     """
+    import ipdb; ipdb.set_trace()
 
     try:
         checkEnvironment()
@@ -152,10 +154,9 @@ def main():
                 from lib.core.testing import liveTest
                 liveTest()
             else:
-                from lib.controller.controller import start
                 try:
                     start()
-                except thread.error as ex:
+                except _thread.error as ex:
                     if "can't start new thread" in getSafeExString(ex):
                         errMsg = "unable to start new threads. Please check OS (u)limits"
                         logger.critical(errMsg)
@@ -185,7 +186,7 @@ def main():
         raise SystemExit
 
     except KeyboardInterrupt:
-        print
+        print()
 
         errMsg = "user aborted"
         try:
@@ -194,7 +195,7 @@ def main():
             pass
 
     except EOFError:
-        print
+        print()
         errMsg = "exit"
 
         try:
@@ -206,7 +207,7 @@ def main():
         pass
 
     except:
-        print
+        print()
         errMsg = unhandledExceptionMessage()
         excMsg = traceback.format_exc()
         valid = checkIntegrity()
@@ -217,13 +218,13 @@ def main():
                 errMsg += "You should retrieve the latest development version from official GitHub "
                 errMsg += "repository at '%s'" % GIT_PAGE
                 logger.critical(errMsg)
-                print
+                print()
                 dataToStdout(excMsg)
                 raise SystemExit
 
             elif any(_ in excMsg for _ in ("tamper/", "waf/")):
                 logger.critical(errMsg)
-                print
+                print()
                 dataToStdout(excMsg)
                 raise SystemExit
 
@@ -306,7 +307,7 @@ def main():
 
             elif "url = url.strip()" in excMsg:
                 dataToStdout(excMsg)
-                print
+                print()
                 errMsg = "please contact 'miroslav@sqlmap.org' with details for this issue "
                 errMsg += "as he is trying to reproduce it for long time"
                 logger.error(errMsg)
@@ -354,7 +355,7 @@ def main():
                         os.remove(filepath)
                     except OSError:
                         pass
-            if not filter(None, (filepath for filepath in glob.glob(os.path.join(kb.tempDir, '*')) if not any(filepath.endswith(_) for _ in ('.lock', '.exe', '_')))):
+            if not [_f for _f in (filepath for filepath in glob.glob(os.path.join(kb.tempDir, '*')) if not any(filepath.endswith(_) for _ in ('.lock', '.exe', '_'))) if _f]:
                 shutil.rmtree(kb.tempDir, ignore_errors=True)
 
         if conf.get("hashDB"):
@@ -396,6 +397,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-else:
-    # cancelling postponed imports (because of Travis CI checks)
-    from lib.controller.controller import start

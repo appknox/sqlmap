@@ -78,7 +78,7 @@ class Dump(object):
 
         try:
             self._outputFP.write(text)
-        except IOError, ex:
+        except IOError as ex:
             errMsg = "error occurred while writing to log file ('%s')" % getSafeExString(ex)
             raise SqlmapGenericException(errMsg)
 
@@ -98,7 +98,7 @@ class Dump(object):
         self._outputFile = os.path.join(conf.outputPath, "log")
         try:
             self._outputFP = openFile(self._outputFile, "ab" if not conf.flushSession else "wb")
-        except IOError, ex:
+        except IOError as ex:
             errMsg = "error occurred while opening log file ('%s')" % getSafeExString(ex)
             raise SqlmapGenericException(errMsg)
 
@@ -132,7 +132,7 @@ class Dump(object):
             if "\n" in _:
                 self._write("%s:\n---\n%s\n---" % (header, _))
             else:
-                self._write("%s:    %s" % (header, ("'%s'" % _) if isinstance(data, basestring) else _))
+                self._write("%s:    %s" % (header, ("'%s'" % _) if isinstance(data, str) else _))
         else:
             self._write("%s:\tNone" % header)
 
@@ -141,7 +141,7 @@ class Dump(object):
             try:
                 elements = set(elements)
                 elements = list(elements)
-                elements.sort(key=lambda _: _.lower() if isinstance(_, basestring) else _)
+                elements.sort(key=lambda _: _.lower() if isinstance(_, str) else _)
             except:
                 pass
 
@@ -153,7 +153,7 @@ class Dump(object):
             self._write("%s [%d]:" % (header, len(elements)))
 
         for element in elements:
-            if isinstance(element, basestring):
+            if isinstance(element, str):
                 self._write("[*] %s" % element)
             elif isListLike(element):
                 self._write("[*] " + ", ".join(getUnicode(e) for e in element))
@@ -191,8 +191,8 @@ class Dump(object):
             self._areAdmins = userSettings[1]
             userSettings = userSettings[0]
 
-        users = userSettings.keys()
-        users.sort(key=lambda _: _.lower() if isinstance(_, basestring) else _)
+        users = list(userSettings.keys())
+        users.sort(key=lambda _: _.lower() if isinstance(_, str) else _)
 
         if conf.api:
             self._write(userSettings, content_type=content_type)
@@ -234,16 +234,16 @@ class Dump(object):
 
             maxlength = 0
 
-            for tables in dbTables.values():
+            for tables in list(dbTables.values()):
                 for table in tables:
                     if table and isListLike(table):
                         table = table[0]
 
-                    maxlength = max(maxlength, len(unsafeSQLIdentificatorNaming(normalizeUnicode(table) or unicode(table))))
+                    maxlength = max(maxlength, len(unsafeSQLIdentificatorNaming(normalizeUnicode(table) or str(table))))
 
             lines = "-" * (int(maxlength) + 2)
 
-            for db, tables in dbTables.items():
+            for db, tables in list(dbTables.items()):
                 tables.sort()
 
                 self._write("Database: %s" % unsafeSQLIdentificatorNaming(db) if db else "Current database")
@@ -260,7 +260,7 @@ class Dump(object):
                         table = table[0]
 
                     table = unsafeSQLIdentificatorNaming(table)
-                    blank = " " * (maxlength - len(normalizeUnicode(table) or unicode(table)))
+                    blank = " " * (maxlength - len(normalizeUnicode(table) or str(table)))
                     self._write("| %s%s |" % (table, blank))
 
                 self._write("+%s+\n" % lines)
@@ -275,18 +275,18 @@ class Dump(object):
                 self._write(tableColumns, content_type=content_type)
                 return
 
-            for db, tables in tableColumns.items():
+            for db, tables in list(tableColumns.items()):
                 if not db:
                     db = "All"
 
-                for table, columns in tables.items():
+                for table, columns in list(tables.items()):
                     maxlength1 = 0
                     maxlength2 = 0
 
                     colType = None
 
-                    colList = columns.keys()
-                    colList.sort(key=lambda _: _.lower() if isinstance(_, basestring) else _)
+                    colList = list(columns.keys())
+                    colList.sort(key=lambda _: _.lower() if isinstance(_, str) else _)
 
                     for column in colList:
                         colType = columns[column]
@@ -352,12 +352,12 @@ class Dump(object):
             maxlength1 = len("Table")
             maxlength2 = len("Entries")
 
-            for ctables in dbTables.values():
-                for tables in ctables.values():
+            for ctables in list(dbTables.values()):
+                for tables in list(ctables.values()):
                     for table in tables:
-                        maxlength1 = max(maxlength1, len(normalizeUnicode(table) or unicode(table)))
+                        maxlength1 = max(maxlength1, len(normalizeUnicode(table) or str(table)))
 
-            for db, counts in dbTables.items():
+            for db, counts in list(dbTables.items()):
                 self._write("Database: %s" % unsafeSQLIdentificatorNaming(db) if db else "Current database")
 
                 lines1 = "-" * (maxlength1 + 2)
@@ -369,7 +369,7 @@ class Dump(object):
                 self._write("| Table%s | Entries%s |" % (blank1, blank2))
                 self._write("+%s+%s+" % (lines1, lines2))
 
-                sortedCounts = counts.keys()
+                sortedCounts = list(counts.keys())
                 sortedCounts.sort(reverse=True)
 
                 for count in sortedCounts:
@@ -378,10 +378,10 @@ class Dump(object):
                     if count is None:
                         count = "Unknown"
 
-                    tables.sort(key=lambda _: _.lower() if isinstance(_, basestring) else _)
+                    tables.sort(key=lambda _: _.lower() if isinstance(_, str) else _)
 
                     for table in tables:
-                        blank1 = " " * (maxlength1 - len(normalizeUnicode(table) or unicode(table)))
+                        blank1 = " " * (maxlength1 - len(normalizeUnicode(table) or str(table)))
                         blank2 = " " * (maxlength2 - len(str(count)))
                         self._write("| %s%s | %d%s |" % (table, blank1, count, blank2))
 
@@ -425,10 +425,10 @@ class Dump(object):
                     if not os.path.isdir(dumpDbPath):
                         try:
                             os.makedirs(dumpDbPath)
-                        except Exception, ex:
+                        except Exception as ex:
                             try:
                                 tempDir = tempfile.mkdtemp(prefix="sqlmapdb")
-                            except IOError, _:
+                            except IOError as _:
                                 errMsg = "unable to write to the temporary directory ('%s'). " % _
                                 errMsg += "Please make sure that your disk is not full and "
                                 errMsg += "that you have sufficient write permissions to "
@@ -481,7 +481,7 @@ class Dump(object):
         field = 1
         fields = len(tableValues) - 1
 
-        columns = prioritySortColumns(tableValues.keys())
+        columns = prioritySortColumns(list(tableValues.keys()))
 
         if conf.col:
             cols = conf.col.split(',')
@@ -581,7 +581,7 @@ class Dump(object):
             warnMsg += "large table size"
             logger.warning(warnMsg)
 
-        for i in xrange(count):
+        for i in range(count):
             console = (i >= count - TRIM_STDOUT_DUMP_SIZE)
             field = 1
             values = []
@@ -597,7 +597,7 @@ class Dump(object):
                         continue
 
                     if info["values"][i] is None:
-                        value = u''
+                        value = ''
                     else:
                         value = getUnicode(info["values"][i])
                         value = DUMP_REPLACEMENTS.get(value, value)
@@ -622,7 +622,7 @@ class Dump(object):
                                 with open(filepath, "wb") as f:
                                     _ = safechardecode(value, True)
                                     f.write(_)
-                        except magic.MagicException, err:
+                        except magic.MagicException as err:
                             logger.debug(str(err))
 
                     if conf.dumpFormat == DUMP_FORMAT.CSV:
@@ -671,7 +671,7 @@ class Dump(object):
             self._write(dbColumnsDict, content_type=CONTENT_TYPE.COLUMNS)
             return
 
-        for column in dbColumnsDict.keys():
+        for column in list(dbColumnsDict.keys()):
             if colConsider == "1":
                 colConsiderStr = "s LIKE '%s' were" % unsafeSQLIdentificatorNaming(column)
             else:
@@ -683,9 +683,9 @@ class Dump(object):
 
             _ = {}
 
-            for db, tblData in dbs.items():
-                for tbl, colData in tblData.items():
-                    for col, dataType in colData.items():
+            for db, tblData in list(dbs.items()):
+                for tbl, colData in list(tblData.items()):
+                    for col, dataType in list(colData.items()):
                         if column.lower() in col.lower():
                             if db in _:
                                 if tbl in _[db]:
