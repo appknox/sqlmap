@@ -56,6 +56,7 @@ from lib.core.unescaper import unescaper
 from lib.request.connect import Connect as Request
 from lib.utils.progress import ProgressBar
 from lib.utils.xrange import xrange
+from custommodules.helperfunc import min_none
 
 def bisection(payload, expression, length=None, charsetType=None, firstChar=None, lastChar=None, dump=False):
     """
@@ -147,13 +148,13 @@ def bisection(payload, expression, length=None, charsetType=None, firstChar=None
             return 0, ""
 
         if length and (lastChar > 0 or firstChar > 0):
-            length = min(length, lastChar or length) - firstChar
+            length = min_none(length, lastChar or length) - firstChar
 
         if length and length > MAX_BISECTION_LENGTH:
             length = None
 
         showEta = conf.eta and isinstance(length, int)
-        numThreads = min(conf.threads, length) or 1
+        numThreads = min_none(conf.threads, length) or 1
 
         if showEta:
             progress = ProgressBar(maxValue=length)

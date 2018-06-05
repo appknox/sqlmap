@@ -114,7 +114,6 @@ def main():
     """
     Main function of sqlmap when running from command line.
     """
-    import ipdb; ipdb.set_trace()
 
     try:
         checkEnvironment()

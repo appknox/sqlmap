@@ -40,9 +40,9 @@ class SmartRedirectHandler(urllib.request.HTTPRedirectHandler):
 
         if headers:
             if "location" in headers:
-                retVal = headers.getheaders("location")[0]
+                retVal = headers.get_all("location")[0]
             elif "uri" in headers:
-                retVal = headers.getheaders("uri")[0]
+                retVal = headers.get_all("uri")[0]
 
         return retVal
 

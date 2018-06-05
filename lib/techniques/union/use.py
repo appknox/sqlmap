@@ -91,7 +91,7 @@ def _oneShotUnionUse(expression, unpack=True, limited=False):
             # Parse the returned page to get the exact UNION-based
             # SQL injection output
             def _(regex):
-                return reduce(lambda x, y: x if x is not None else y, (extractRegexResult(regex, removeReflectiveValues(page, payload), re.DOTALL | re.IGNORECASE), extractRegexResult(regex, removeReflectiveValues(listToStrValue((_ for _ in headers.headers if not _.startswith(HTTP_HEADER.URI)) if headers else None), payload, True), re.DOTALL | re.IGNORECASE)), None)
+                return reduce(lambda x, y: x if x is not None else y, (extractRegexResult(regex, removeReflectiveValues(page, payload), re.DOTALL | re.IGNORECASE), extractRegexResult(regex, removeReflectiveValues(listToStrValue((_ for _ in headers.items() if not _[0].startswith(HTTP_HEADER.URI)) if headers else None), payload, True), re.DOTALL | re.IGNORECASE)), None)
 
             # Automatically patching last char trimming cases
             if kb.chars.stop not in (page or "") and kb.chars.stop[:-1] in (page or ""):
@@ -244,7 +244,6 @@ def unionUse(expression, unpack=True, dump=False):
             if " ORDER BY " in countedExpression.upper():
                 _ = countedExpression.upper().rindex(" ORDER BY ")
                 countedExpression = countedExpression[:_]
-
             output = _oneShotUnionUse(countedExpression, unpack)
             count = unArrayizeValue(parseUnionPage(output))
 

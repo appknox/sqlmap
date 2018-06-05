@@ -1628,7 +1628,7 @@ def parseUnionPage(page):
             if kb.safeCharEncode:
                 entry = applyFunctionRecursively(entry, safecharencode)
 
-            data.append(entry[0] if len(entry) == 1 else entry)
+            data.append(entry[0].encode() if len(entry) == 1 else entry.encode())
     else:
         data = page
 
@@ -2589,7 +2589,7 @@ def urldecode(value, encoding=None, unsafe="%%&=;+%s" % CUSTOM_INJECTION_MARK_CH
                 result = re.sub(r"%([0-9a-fA-F]{2})", _, result)
 
     if isinstance(result, str):
-        result = str(result, encoding or UNICODE_ENCODING, "replace")
+        result = str(result)
 
     return result
 
@@ -3506,7 +3506,7 @@ def removeReflectiveValues(content, payload, suppressWarning=False):
                 return value
 
             payload = getUnicode(urldecode(payload.replace(PAYLOAD_DELIMITER, ""), convall=True))
-            regex = _(filterStringValue(payload, r"[A-Za-z0-9]", REFLECTED_REPLACEMENT_REGEX.encode("string-escape")))
+            regex = _(filterStringValue(payload, r"[A-Za-z0-9]", REFLECTED_REPLACEMENT_REGEX))
 
             if regex != payload:
                 if all(part.lower() in content.lower() for part in [_f for _f in regex.split(REFLECTED_REPLACEMENT_REGEX) if _f][1:]):  # fast optimization check
@@ -4395,7 +4395,7 @@ def getRequestHeader(request, name):
     if request and name:
         _ = name.upper()
         # retVal = max(value if _ == key.upper() else None for key, value in request.header_items())
-        retVal = next((value for key, value in request.header_items() if _ == key.upper().decode()), None)
+        retVal = next((value for key, value in request.header_items() if _ == key.upper()), None)
 
     return retVal
 

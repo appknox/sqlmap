@@ -153,7 +153,7 @@ class Dump(object):
             self._write("%s [%d]:" % (header, len(elements)))
 
         for element in elements:
-            if isinstance(element, str):
+            if not isinstance(element, str):
                 self._write("[*] %s" % element)
             elif isListLike(element):
                 self._write("[*] " + ", ".join(getUnicode(e) for e in element))

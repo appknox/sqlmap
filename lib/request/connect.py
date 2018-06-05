@@ -184,7 +184,7 @@ class Connect(object):
 
     @staticmethod
     def _connReadProxy(conn):
-        retVal = ""
+        retVal = b""
 
         if not kb.dnsMode and conn:
             headers = conn.info()
@@ -394,7 +394,8 @@ class Connect(object):
                 value = unicodeencode(value, kb.pageEncoding).decode()
                 for char in (r"\r", r"\n"):
                     value = re.sub(r"(%s)([^ \t])" % char, r"\g<1>\t\g<2>", value)
-                headers[unicodeencode(key, kb.pageEncoding)] = value.strip("\r\n")
+                # headers[unicodeencode(key, kb.pageEncoding)] = value.strip("\r\n")
+                headers[key] = value.strip("\r\n")
 
             url = unicodeencode(url)
             post = unicodeencode(post)
@@ -426,10 +427,12 @@ class Connect(object):
                 logger.log(CUSTOM_LOGGING.TRAFFIC_OUT, requestMsg)
             else:
                 if method and method not in (HTTPMETHOD.GET, HTTPMETHOD.POST):
+                    url = url.decode()
                     method = unicodeencode(method)
                     req = MethodRequest(url, post, headers)
                     req.set_method(method)
                 else:
+                    url = url.decode()
                     req = urllib.request.Request(url, post, headers)
 
                 requestHeaders += "\r\n".join(["%s: %s" % (getUnicode(key.capitalize() if isinstance(key, str) else key), getUnicode(value)) for (key, value) in req.header_items()])
@@ -465,7 +468,6 @@ class Connect(object):
                         else:
                             for char in (r"\r", r"\n"):
                                 cookie.value = re.sub(r"(%s)([^ \t])" % char, r"\g<1>\t\g<2>", cookie.value)
-
                 conn = urllib.request.urlopen(req)
 
                 if not kb.authHeader and getRequestHeader(req, HTTP_HEADER.AUTHORIZATION) and (conf.authType or "").lower() == AUTH_TYPE.BASIC.lower():

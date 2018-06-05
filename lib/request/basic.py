@@ -218,7 +218,7 @@ def checkCharEncoding(encoding, warn=True):
     # Reference: http://www.iana.org/assignments/character-sets
     # Reference: http://docs.python.org/library/codecs.html
     try:
-        codecs.lookup(encoding.encode(UNICODE_ENCODING) if isinstance(encoding, str) else encoding)
+        codecs.lookup(UNICODE_ENCODING if isinstance(encoding, str) else encoding)
     except (LookupError, ValueError):
         if warn and ' ' not in encoding:
             warnMsg = "unknown web page charset '%s'. " % encoding
@@ -228,7 +228,7 @@ def checkCharEncoding(encoding, warn=True):
 
     if encoding:
         try:
-            str(randomStr(), encoding)
+            str(randomStr().encode(), encoding)
         except:
             if warn:
                 warnMsg = "invalid web page charset '%s'" % encoding
@@ -279,12 +279,12 @@ def decodePage(page, contentEncoding, contentType):
             if contentEncoding == "deflate":
                 data = io.StringIO(zlib.decompress(page, -15))  # Reference: http://stackoverflow.com/questions/1089662/python-inflate-and-deflate-implementations
             else:
-                data = gzip.GzipFile("", "rb", 9, io.StringIO(page))
+                data = gzip.GzipFile("", "rb", 9, io.BytesIO(page))
                 size = struct.unpack("<l", page[-4:])[0]  # Reference: http://pydoc.org/get.cgi/usr/local/lib/python2.5/gzip.py
                 if size > MAX_CONNECTION_TOTAL_SIZE:
                     raise Exception("size too large")
 
-            page = data.read()
+            page = data.read().decode()
         except Exception as msg:
             if "<html" not in page:  # in some cases, invalid "Content-Encoding" appears for plain HTML (should be ignored)
                 errMsg = "detected invalid data for declared content "
@@ -299,7 +299,7 @@ def decodePage(page, contentEncoding, contentType):
 
     if not conf.encoding:
         httpCharset, metaCharset = None, None
-
+        
         # Reference: http://stackoverflow.com/questions/1020892/python-urllib2-read-to-unicode
         if contentType.find("charset=") != -1:
             httpCharset = checkCharEncoding(contentType.split("charset=")[-1])

@@ -17,33 +17,27 @@ from plugins.generic.misc import Miscellaneous
 
 
 class A(Syntax):
-    def __init__(self):
-        Syntax.__init__(self)
+    pass
 
 
 class B(A, Fingerprint):
-    def __init__(self):
-        Fingerprint.__init__(self)
+    pass
 
 
 class C(B, Enumeration):
-    def __init__(self):
-        Enumeration.__init__(self)
+    pass
 
 
 class D(C, Filesystem):
-    def __init__(self):
-        Filesystem.__init__(self)
+    pass
 
 
 class E(D, Miscellaneous):
-    def __init__(self):
-        Miscellaneous.__init__(self)
+    pass
 
 
 class F(E, Takeover):
-    def __init__(self):
-        Takeover.__init__(self)
+    pass
 
 
 class MSSQLServerMap(F):
@@ -53,5 +47,11 @@ class MSSQLServerMap(F):
 
     def __init__(self):
         self.excludeDbsList = MSSQL_SYSTEM_DBS
+        Syntax.__init__(self)
+        Fingerprint.__init__(self)
+        Enumeration.__init__(self)
+        Filesystem.__init__(self)
+        Miscellaneous.__init__(self)
+        Takeover.__init__(self)
 
     unescaper[DBMS.MSSQL] = Syntax.escape
